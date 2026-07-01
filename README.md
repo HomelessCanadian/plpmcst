@@ -16,6 +16,21 @@ Built natively for Linux servers (Ubuntu/Mint/Debian) running **Vanilla, Paper, 
 
 ---
 
+## 📋 Prerequisites
+
+While the interactive installer will automatically audit your system and attempt to configure dependencies, ensuring the following packages are present will guarantee a seamless setup:
+
+* **System Utilities:** `tmux` (required for server console targeting)
+* **Python Environment:** `python3` and the `requests` library (required for Discord webhooks)
+* **Optional:** `libnotify-bin` (for native Linux desktop alert popups)
+
+On Debian/Ubuntu-based systems, you can quickly verify or install them all with:
+```bash
+sudo apt update && sudo apt install tmux python3 python3-requests libnotify-bin -y
+```
+
+---
+
 ## 🚀 Automatic Installation (Recommended)
 
 The easiest way to deploy the toolkit is to use the self-contained, interactive bundle wrapper. It automatically audits your system dependencies, creates your directories, configures local environment spaces, and hooks up the background scheduling engines.
