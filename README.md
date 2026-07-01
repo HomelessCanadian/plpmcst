@@ -28,7 +28,16 @@ On Debian/Ubuntu-based systems, you can quickly verify or install them all with:
 ```bash
 sudo apt update && sudo apt install tmux python3 python3-requests libnotify-bin -y
 ```
-
+For you harcore users:
+```bash
+sudo pacman -Syu tmux python python-requests libnotify --noconfirm
+```
+```bash
+sudo dnf install tmux python3 python3-requests libnotify -y
+```
+```bash
+sudo zypper install tmux python3 python3-requests libnotify-tools -y
+```
 ---
 
 ## 🚀 Automatic Installation (Recommended)
