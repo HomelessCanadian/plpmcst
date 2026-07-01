@@ -2,8 +2,15 @@
 # --- PLPMCST: Systemd Timer Registration Utility ---
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BACKUP_SCRIPT="$SCRIPT_DIR/backup.sh"
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$DIR/.env" ]; then
+    source "$DIR/.env"
+else
+    echo "❌ .env not found."
+    exit 1
+fi
+BACKUP_SCRIPT="$DIR/backup.sh"
+RUN_USER="${SUDO_USER:-$(whoami)}"
 
 echo "=== PLPMCST Systemd Timer Installer ==="
 
@@ -14,11 +21,8 @@ if [ ! -f "$BACKUP_SCRIPT" ]; then
     exit 1
 fi
 
-# 2. Extract active running configuration configurations dynamically
-echo "Reading current toolkit deployment values..."
-INTERVAL_MINUTES=$(grep -E "^INTERVAL_MINUTES=" "$BACKUP_SCRIPT" | cut -d= -f2 | tr -d '"')
-
-# Default fallback if the file token hasn't been parsed yet
+# 2. FIX: INTERVAL_MINUTES already lives in .env (sourced above) — no need to
+# grep it out of backup.sh, which never actually contained it.
 if [ -z "$INTERVAL_MINUTES" ] || [[ ! "$INTERVAL_MINUTES" =~ ^[0-9]+$ ]]; then
     echo "⚠️  Could not auto-detect a valid backup interval."
     read -p "Enter backup clock execution window (in minutes, e.g., 30): " INTERVAL_MINUTES
@@ -29,9 +33,8 @@ echo "⏱️  Target Execution Clock: Run every $INTERVAL_MINUTES minutes"
 echo ""
 
 # 3. Request elevation permissions and apply provisioning profiles
-echo "Registering daemon infrastructure targets (Requires root elevation)..."
+echo "Registering systemd service and timer (Requires root elevation)..."
 
-# Generate the background execution unit service block
 cat <<EOF | sudo tee /etc/systemd/system/plpmcst-backup.service > /dev/null
 [Unit]
 Description=PLPMCST Minecraft Automated Backup Task
@@ -39,11 +42,10 @@ After=network.target
 
 [Service]
 Type=oneshot
-User=$(whoami)
+User=$RUN_USER
 ExecStart=$BACKUP_SCRIPT
 EOF
 
-# Generate the recurring hardware scheduling matrix timer configuration
 cat <<EOF | sudo tee /etc/systemd/system/plpmcst-backup.timer > /dev/null
 [Unit]
 Description=Run PLPMCST Minecraft Backup every $INTERVAL_MINUTES minutes
@@ -52,12 +54,12 @@ Description=Run PLPMCST Minecraft Backup every $INTERVAL_MINUTES minutes
 OnBootSec=5min
 OnUnitActiveSec=${INTERVAL_MINUTES}min
 Unit=plpmcst-backup.service
+Persistent=true
 
 [Install]
 WantedBy=timers.target
 EOF
 
-# 4. Engine Realignment & Daemon Fire-up
 sudo systemctl daemon-reload
 sudo systemctl enable plpmcst-backup.timer
 sudo systemctl start plpmcst-backup.timer

@@ -33,16 +33,22 @@ sudo apt update && sudo apt install tmux python3 python3-requests libnotify-bin 
 
 ## 🚀 Automatic Installation (Recommended)
 
-The easiest way to deploy the toolkit is to use the self-contained, interactive bundle wrapper. It automatically audits your system dependencies, creates your directories, configures local environment spaces, and hooks up the background scheduling engines.
+The easiest way to deploy the toolkit is to use the self-contained, interactive bundle wrapper (`plpmcst-installer.sh`). It's a single file - the setup wizard with the rest of the toolkit packed into it as a base64-encoded payload — so it survives downloads, copy-paste, and editors that like to "helpfully" re-save files as text.
 
-1. Download or move `install_plpmcst.sh` to your server.
+1. Download or move `plpmcst-installer.sh` to your server.
 2. Grant execution permissions and run the wizard:
 ```bash
-   chmod +x install_plpmcst.sh
-   ./install_plpmcst.sh
+   chmod +x plpmcst-installer.sh
+   ./plpmcst-installer.sh
 ```
-
 3. Follow the interactive terminal prompts to select your operational configurations.
+
+The wizard creates `.env` (your full config — server path, backup thresholds, webhook, everything) and drops `backup.sh`, `start.sh`, `provision_timer.sh`, and `streamWebhook.py` alongside it in your chosen install directory.
+
+**Before trusting a copy of the installer**, especially since it runs `sudo` for the systemd step, verify it against a known-good hash:
+```bash
+sha256sum plpmcst-installer.sh
+```
 
 ---
 
@@ -50,33 +56,22 @@ The easiest way to deploy the toolkit is to use the self-contained, interactive 
 
 If you prefer to configure your environment paths manually, or you declined system automation features during the initial installation wizard:
 
-1. Extract the toolkit payload files directly into your desired directory folder space.
-2. Open `backup.sh` in a text editor and replace the `##INJECT_...##` variables at the top of the file with your paths and thresholds:
+1. Place `env.template`, `backup.sh`, `start.sh`, `provision_timer.sh`, and `streamWebhook.py` directly into your desired install directory.
+2. Rename `env.template` to `.env`, then open it and fill in your paths and thresholds:
 ```bash
 SERVER_ROOT="/path/to/your/server"
 BACKUP_DIR="/path/to/your/backups"
 INTERVAL_MINUTES=30
 RETENTION_LIMIT=20
 MAX_DISK=90
-
+WEBHOOK_URL=""   # leave blank to log locally instead of to Discord
 ```
-
-
-3. If using Discord integration, create a file named `.env` in the toolkit folder and supply your webhook profile:
+3. If using Discord integration, just fill in `WEBHOOK_URL` above — no separate file needed, it's the same `.env`.
+4. **Activate Background Backups:** To latch the backup sequence directly onto your Linux hardware clock engine without starting from scratch, run the standalone scheduling utility:
 ```bash
-WEBHOOK_URL="https://discord.com/api/webhooks/your_token_string"
-
+chmod +x provision_timer.sh
+./provision_timer.sh
 ```
-
-
-4. **Activate Background Backups:** To latch the backup sequence directly onto your Linux hardware clock engine without starting from scratch, run the standalone scheduling utility helper:
-```bash
-chmod +x register-timer.sh
-./register-timer.sh
-
-```
-
-
 
 ---
 
@@ -87,16 +82,14 @@ Once the native system architecture is locked down, you can audit, analyze, or t
 * **Check Upcoming Backup Schedules:**
 ```bash
 systemctl list-timers | grep plpmcst
-
 ```
-
 
 * **Review Live Service Execution Output Logs:**
 ```bash
 journalctl -u plpmcst-backup.service -f
-
 ```
 
-
 * **Modify Configuration Details Later:**
-Simply edit the custom variable settings embedded inside `backup.sh` or swap the webhook destination link pointing to your Discord chat platform directly inside your hidden `.env` file environment. No full system reinstallation is required!
+Edit `.env` in your install directory - backup thresholds, server path, retention count, disk warning %, and the Discord webhook link all live there. `backup.sh` reads it fresh on every run, so no restart is required.
+
+```
