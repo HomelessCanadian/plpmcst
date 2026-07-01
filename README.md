@@ -22,10 +22,9 @@ The easiest way to deploy the toolkit is to use the self-contained, interactive 
 
 1. Download or move `install_plpmcst.sh` to your server.
 2. Grant execution permissions and run the wizard:
-   ```bash
+```bash
    chmod +x install_plpmcst.sh
    ./install_plpmcst.sh
-
 ```
 
 3. Follow the interactive terminal prompts to select your operational configurations.
