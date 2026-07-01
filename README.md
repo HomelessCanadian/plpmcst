@@ -33,17 +33,17 @@ sudo apt update && sudo apt install tmux python3 python3-requests libnotify-bin 
 
 ## 🚀 Automatic Installation (Recommended)
 
-The easiest way to deploy the toolkit is to use the self-contained, interactive bundle wrapper (`plpmcst-installer.sh`). It's a single file - the setup wizard with the rest of the toolkit packed into it as a base64-encoded payload — so it survives downloads, copy-paste, and editors that like to "helpfully" re-save files as text.
+The easiest way to deploy the toolkit is to use the self-contained, interactive install wizard (`plpmcst-installer.sh`). It's a single file with a compressed copy of the entire utility.
 
 1. Download or move `plpmcst-installer.sh` to your server.
-2. Grant execution permissions and run the wizard:
+2. Grant execution permissions (if necessary) and run the wizard:
 ```bash
    chmod +x plpmcst-installer.sh
    ./plpmcst-installer.sh
 ```
 3. Follow the interactive terminal prompts to select your operational configurations.
 
-The wizard creates `.env` (your full config — server path, backup thresholds, webhook, everything) and drops `backup.sh`, `start.sh`, `provision_timer.sh`, and `streamWebhook.py` alongside it in your chosen install directory.
+The wizard creates `.env` (your full config) and drops `backup.sh`, `start.sh`, `provision_timer.sh`, and `streamWebhook.py` alongside it in your chosen install directory.
 
 **Before trusting a copy of the installer**, especially since it runs `sudo` for the systemd step, verify it against a known-good hash:
 ```bash
@@ -66,8 +66,7 @@ RETENTION_LIMIT=20
 MAX_DISK=90
 WEBHOOK_URL=""   # leave blank to log locally instead of to Discord
 ```
-3. If using Discord integration, just fill in `WEBHOOK_URL` above — no separate file needed, it's the same `.env`.
-4. **Activate Background Backups:** To latch the backup sequence directly onto your Linux hardware clock engine without starting from scratch, run the standalone scheduling utility:
+3. **Activate Background Backups:** To latch the backup sequence directly onto your Linux hardware clock engine without starting from scratch, run the standalone scheduling utility:
 ```bash
 chmod +x provision_timer.sh
 ./provision_timer.sh
