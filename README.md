@@ -99,5 +99,3 @@ journalctl -u plpmcst-backup.service -f
 
 * **Modify Configuration Details Later:**
 Edit `.env` in your install directory - backup thresholds, server path, retention count, disk warning %, and the Discord webhook link all live there. `backup.sh` reads it fresh on every run, so no restart is required.
-
-```
