@@ -8,11 +8,12 @@ Built natively for Linux servers (Ubuntu/Mint/Debian) running **Vanilla, Paper, 
 
 ## ✨ Features
 
-* **Low-Resource Footprint:** Uses `nice -n 19` and `ionice -c 3` background compression profiles to guarantee your server's TPS never drops during live backup tasks.
-* **Smart State Engine:** Interacts natively with `tmux` to freeze the game world via `save-off` during disk compression, ensuring zero file corruption.
-* **Adaptive Environment Mapper:** Automatically detects whether your installation uses isolated dimension mapping (Paper split layout) or bundled folders (Vanilla/Fabric standard layouts) and scales backups automatically.
-* **p4nk-pipe Stream Buffer:** A secure Python pipeline that streams server terminal logs straight to Discord while stripping Markdown injection bugs (backticks) and redacting explicit internal IPv4/IPv6 address footprints.
-* **Systemd Daemons:** Native background timing using system clocks instead of resource-heavy sleep loops or flaky crontabs.
+* **💾 Automatic Backups - Creates compressed backups on a schedule without interrupting gameplay.
+* **🛡️ Safe Backup Process - Temporarily pauses world saving to prevent corrupted backups.
+* **🌍 Works with Vanilla, Paper, Purpur, and Fabric - Automatically detects your server layout.
+* **💬 Discord Console Logging - Watch your server console from Discord, with sensitive information automatically hidden.
+* **⚡ Low Performance Impact - Runs backups with the lowest CPU and disk priority so your server stays responsive.
+* **⏰ Reliable Scheduling - Uses native Linux systemd timers instead of cron for dependable automation.
 
 ---
 
@@ -66,37 +67,149 @@ sha256sum plpmcst-installer.sh
 
 If you prefer to configure your environment paths manually, or you declined system automation features during the initial installation wizard:
 
-1. Place `env.template`, `backup.sh`, `start.sh`, `provision_timer.sh`, and `streamWebhook.py` directly into your desired install directory.
-2. Rename `env.template` to `.env`, then open it and fill in your paths and thresholds:
+1. Place `.env`, `backup.sh`, `start.sh`, and `streamWebhook.py` directly into your desired install directory.
+2. Open `.env` and fill in your paths and thresholds:
 ```bash
 SERVER_ROOT="/path/to/your/server"
 BACKUP_DIR="/path/to/your/backups"
 INTERVAL_MINUTES=30
 RETENTION_LIMIT=20
 MAX_DISK=90
-WEBHOOK_URL=""   # leave blank to log locally instead of to Discord
+WEBHOOK_URL=""   # leave blank to ignore discord logging (local logs only)
 ```
 3. **Activate Background Backups:** To latch the backup sequence directly onto your Linux hardware clock engine without starting from scratch, run the standalone scheduling utility:
 ```bash
 chmod +x provision_timer.sh
 ./provision_timer.sh
 ```
-
+If you ever need to run a backup on the fly, just run the `backup.sh` script manually:
+```bash
+./backup.sh
+```
+Now your launcher script is ready to serve your Minecraft session.
+```bash
+./start.sh
+```
 ---
 
 ## ⚙️ Maintenance & Administration
 
-Once the native system architecture is locked down, you can audit, analyze, or tweak the operational background infrastructure using standard system commands:
+Once installed, PLPMCST requires very little maintenance. The following commands can help you monitor or adjust the toolkit.
 
-* **Check Upcoming Backup Schedules:**
+### 📅 Check the Backup Schedule
+
+View when the next automatic backup will run:
+
 ```bash
 systemctl list-timers | grep plpmcst
 ```
 
-* **Review Live Service Execution Output Logs:**
+This displays the next scheduled execution time for the backup timer.
+
+---
+
+### 📜 View Backup Logs
+
+Watch the backup service output live:
+
 ```bash
 journalctl -u plpmcst-backup.service -f
 ```
 
-* **Modify Configuration Details Later:**
-Edit `.env` in your install directory - backup thresholds, server path, retention count, disk warning %, and the Discord webhook link all live there. `backup.sh` reads it fresh on every run, so no restart is required.
+Press **Ctrl+C** when you're finished viewing the logs.
+
+To see previous backup runs instead of following live output:
+
+```bash
+journalctl -u plpmcst-backup.service
+```
+
+---
+
+### ⚙️ Modify Configuration
+
+All user-configurable settings are stored in `.env`.
+
+Common settings include:
+
+- Server location
+- Backup destination
+- Backup interval
+- Backup retention limit
+- Maximum disk usage warning
+- Discord webhook URL
+- tmux session names
+
+Edit the file with your preferred text editor, for example:
+
+```bash
+nano .env
+```
+
+Most changes are picked up automatically the next time `backup.sh` runs—no restart is required.
+
+> **Note:** If you're using a tunneling service other than Playit (such as Tailscale, ngrok, or your own startup script), you'll need to modify `start.sh` to launch it alongside the Minecraft server.
+
+---
+
+### 🖥️ Managing Your Server with tmux
+
+PLPMCST launches your Minecraft server inside a **tmux** session, allowing it to continue running even after you disconnect from SSH.
+
+If Playit support is enabled, `start.sh` also launches the Playit agent in a separate tmux session automatically.
+
+By default, the session names are:
+
+| Service | Default Session |
+|---------|-----------------|
+| Minecraft Server | `minecraft` |
+| Playit Tunnel | `playit` |
+
+Both session names can be changed in `.env`.
+
+#### List running sessions
+
+```bash
+tmux ls
+```
+
+Example:
+
+```text
+minecraft: 1 windows
+playit: 1 windows
+```
+
+#### Attach to the Minecraft console
+
+```bash
+tmux attach -t minecraft
+```
+
+You can now view the live server console and enter Minecraft commands directly.
+
+#### Attach to the Playit console
+
+```bash
+tmux attach -t playit
+```
+
+This displays the Playit agent's output and connection status.
+
+#### Leave a session without stopping it
+
+Press:
+
+```
+Ctrl+B
+```
+
+then
+
+```
+D
+```
+
+This detaches from the session while leaving the program running.
+
+> **Tip:** Closing your SSH window while attached may terminate the running process. Always detach (`Ctrl+B`, then `D`) before disconnecting.
