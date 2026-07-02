@@ -57,6 +57,7 @@ The wizard creates `.env` (your full config) and drops `backup.sh`, `start.sh`, 
 **Before trusting a copy of the installer**, especially since it runs `sudo` for the systemd step, verify it against a known-good hash:
 ```bash
 sha256sum plpmcst-installer.sh
+93893515934f01206f93c33e82e788459cea8e335a51c1ab22490a158ca7fc58 plpmcst-install.sh
 ```
 
 ---
